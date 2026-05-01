@@ -1,4 +1,17 @@
-#env
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Variáveis de ambiente (nunca subir para o GitHub)
+.env
 *.env
+
+# Referência pública — pode subir
+!.env.example
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
 
 langchain

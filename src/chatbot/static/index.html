@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Cuidado • Chat</title>
+  <style>
+    :root {
+      --bg: #09090f;
+      --panel: #121226;
+      --panel-2: #1a1a2f;
+      --purple: #8b5cf6;
+      --cyan: #22d3ee;
+      --white: #f5f7ff;
+      --gray: #9ca3af;
+      --line: #2a2a3f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.16), transparent 35%),
+                  radial-gradient(circle at top left, rgba(139, 92, 246, 0.2), transparent 45%),
+                  var(--bg);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .chat-shell {
+      width: min(920px, 100%);
+      height: min(90vh, 820px);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: linear-gradient(145deg, rgba(18, 18, 38, 0.92), rgba(10, 10, 17, 0.95));
+      box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.15),
+                  0 25px 80px rgba(0, 0, 0, 0.55),
+                  0 0 80px rgba(34, 211, 238, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.12), rgba(34, 211, 238, 0.08));
+    }
+
+    .title-wrap h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .title-wrap p {
+      font-size: 0.82rem;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    .status {
+      font-size: 0.78rem;
+      color: var(--cyan);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.08);
+      white-space: nowrap;
+    }
+
+    .chat-area {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 14px 15px;
+      border-radius: 14px;
+      line-height: 1.45;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid transparent;
+    }
+
+    .message.user {
+      margin-left: auto;
+      background: linear-gradient(145deg, rgba(139, 92, 246, 0.3), rgba(99, 102, 241, 0.22));
+      border-color: rgba(139, 92, 246, 0.35);
+    }
+
+    .message.bot {
+      margin-right: auto;
+      background: linear-gradient(145deg, rgba(34, 211, 238, 0.14), rgba(75, 85, 99, 0.2));
+      border-color: rgba(34, 211, 238, 0.2);
+    }
+
+    .composer {
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: rgba(13, 13, 22, 0.95);
+    }
+
+    .composer textarea {
+      flex: 1;
+      min-height: 52px;
+      max-height: 170px;
+      resize: vertical;
+      border-radius: 12px;
+      border: 1px solid #2f2f4f;
+      background: var(--panel-2);
+      color: var(--white);
+      padding: 12px 13px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .composer textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    }
+
+    .composer button {
+      min-width: 132px;
+      border: 0;
+      border-radius: 12px;
+      font-weight: 700;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--purple), #4f46e5);
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.2s ease;
+    }
+
+    .composer button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .composer button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--gray);
+      text-align: center;
+      padding-bottom: 10px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 12px 16px;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30%            { transform: translateY(-6px); opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .chat-shell {
+        height: 95vh;
+      }
+
+      .message {
+        max-width: 92%;
+      }
+
+      .composer {
+        flex-direction: column;
+      }
+
+      .composer button {
+        min-height: 46px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="chat-shell">
+    <header class="topbar">
+      <div class="title-wrap">
+        <h1>Gestão de Cuidado • Assistente</h1>
+        <p>Medicamentos, consultas, pressão arterial, alergias e exames em PDF</p>
+      </div>
+      <span class="status" id="status">Conectando...</span>
+    </header>
+
+    <main class="chat-area" id="chatArea" aria-live="polite"></main>
+
+    <footer>
+      <div class="composer">
+        <textarea id="messageInput" placeholder="Digite sua pergunta... (ex.: registrar pressão 13/8)"></textarea>
+        <button id="sendBtn" type="button">Enviar</button>
+      </div>
+      <p class="hint">Enter envia • Shift+Enter quebra linha</p>
+    </footer>
+  </section>
+
+  <script>
+    const chatArea = document.getElementById('chatArea');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusBadge = document.getElementById('status');
+
+    function addMessage(role, text) {
+      const bubble = document.createElement('article');
+      bubble.className = `message ${role}`;
+      bubble.textContent = text;
+      chatArea.appendChild(bubble);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function setStatus(text, isError = false) {
+      statusBadge.textContent = text;
+      statusBadge.style.color = isError ? '#fda4af' : 'var(--cyan)';
+      statusBadge.style.borderColor = isError ? 'rgba(251, 113, 133, 0.4)' : 'rgba(34, 211, 238, 0.35)';
+      statusBadge.style.background = isError ? 'rgba(251, 113, 133, 0.12)' : 'rgba(34, 211, 238, 0.08)';
+    }
+
+    function showTyping() {
+      const bubble = document.createElement('article');
+      bubble.className = 'message bot';
+      bubble.id = 'typingIndicator';
+      bubble.innerHTML = `
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>`;
+      chatArea.appendChild(bubble);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      addMessage('user', message);
+      messageInput.value = '';
+      sendBtn.disabled = true;
+      setStatus('Processando...');
+      showTyping();
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        removeTyping();
+        if (!response.ok) {
+          throw new Error(data.error || 'Falha na requisição');
+        }
+
+        addMessage('bot', data.reply || 'Sem resposta.');
+        setStatus('Online');
+      } catch (error) {
+        removeTyping();
+        addMessage('bot', `Erro: ${error.message}`);
+        setStatus('Falha de conexão', true);
+      } finally {
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    addMessage('bot', 'Olá! Sou o assistente da Gestão de Cuidado. Como posso ajudar hoje?');
+    setStatus('Online');
+    messageInput.focus();
+  </script>
+</body>
+</html>
